@@ -1,9 +1,9 @@
-import { FC, ReactElement, useEffect, useState } from "react";
-import { Doter } from "./doter";
-import { Container } from "./styles";
-import { getMapJSON } from "dotted-map";
+import { FC, ReactElement, useEffect, useState } from 'react';
+import { Doter } from './doter';
+import { Container } from './styles';
+import { getMapJSON } from 'dotted-map';
 
-const mapJsonString = getMapJSON({ height: 100, grid: "diagonal" });
+const mapJsonString = getMapJSON({ height: 100, grid: 'diagonal' });
 
 const coords = [
   [41.74917603890991, 44.79865968299764],
@@ -29,16 +29,16 @@ export const WorldMap: FC = () => {
       map.addPin({
         lat,
         lng,
-        svgOptions: { color: "#d6ff79", radius: 0.25 },
+        svgOptions: { color: '#d6ff79', radius: 0.25 },
       });
     });
 
     setSvgMap(
       map.getSVG({
         radius: 0.25,
-        color: "#7e7e7e",
-        shape: "hexagon",
-        backgroundColor: "transparent",
+        color: '#7e7e7e',
+        shape: 'hexagon',
+        backgroundColor: 'transparent',
       }),
     );
   }, []);

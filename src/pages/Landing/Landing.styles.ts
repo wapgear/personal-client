@@ -1,6 +1,6 @@
-import styled from "@emotion/styled";
-import { forMobiles } from "../../utils/breakpoints";
-import { css } from "@emotion/react";
+import styled from '@emotion/styled';
+import { forMobiles } from '../../utils/breakpoints';
+import { css } from '@emotion/react';
 
 export const AvatarContainer = styled.div`
   img {
@@ -22,8 +22,10 @@ export const InfoContainer = styled.div`
   }
 
   h1 {
-    font-feature-settings: "clig" off, "liga" off;
-    font-family: "Gilroy", sans-serif;
+    font-feature-settings:
+      'clig' off,
+      'liga' off;
+    font-family: 'Gilroy', sans-serif;
     font-size: 36px;
     font-style: normal;
     font-weight: 500;

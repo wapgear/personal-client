@@ -1,1 +1,1 @@
-export { ExclusiveLayout } from "./ExclusiveLayout"
+export { ExclusiveLayout } from './ExclusiveLayout';

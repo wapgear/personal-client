@@ -1,8 +1,8 @@
-import { useEffect } from "react";
-import { tonApiClient } from "../tonApiClient.ts";
-import { useDashboardStore } from "../store.ts";
-import { useTonAddress } from "@tonconnect/ui-react";
-import { useDedustApi } from "./useDedustApi.ts";
+import { useEffect } from 'react';
+import { tonApiClient } from '../tonApiClient.ts';
+import { useDashboardStore } from '../store.ts';
+import { useTonAddress } from '@tonconnect/ui-react';
+import { useDedustApi } from './useDedustApi.ts';
 
 export const useTonMagic = () => {
   const { account, setAccount, jettons, setJettons } = useDashboardStore();
@@ -11,8 +11,8 @@ export const useTonMagic = () => {
 
   useEffect(() => {
     if (fullAddress) {
-      dedustApi.getLiquidityProviders(fullAddress).then(result => {
-        console.log("huh?", result);
+      dedustApi.getLiquidityProviders(fullAddress).then((result) => {
+        console.log('huh?', result);
       });
     }
   }, [dedustApi, fullAddress]);
@@ -25,12 +25,13 @@ export const useTonMagic = () => {
 
   useEffect(() => {
     if (fullAddress && Date.now() - jettons.timestamp > 1000 * 30) {
-      tonApiClient.accounts.getAccountJettonsBalances(fullAddress, {
-        currencies: ["ton,usd"]
-      }).then(({ balances }) => {
-        setJettons(balances);
-      });
-
+      tonApiClient.accounts
+        .getAccountJettonsBalances(fullAddress, {
+          currencies: ['ton,usd'],
+        })
+        .then(({ balances }) => {
+          setJettons(balances);
+        });
     }
   }, [fullAddress, jettons.timestamp, setJettons]);
 };
