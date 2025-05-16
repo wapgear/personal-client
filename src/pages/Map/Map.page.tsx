@@ -1,7 +1,9 @@
-import { FC, useEffect, useRef } from 'react';
+import { FC, useEffect, useRef, useState } from 'react';
 import { getMapJSON } from 'dotted-map';
 import { Doter } from './doter';
 import { Container } from './styles';
+import CircularProgress from '@mui/material/CircularProgress';
+import Typography from '@mui/material/Typography';
 
 // list of coordinates to pin
 const coords: Array<[number, number]> = [
@@ -19,6 +21,7 @@ const coords: Array<[number, number]> = [
 ];
 
 const RADIUS = 0.1;
+const MAP_HEIGHT = 200;
 
 // throttle helper to limit how often a function can run
 function throttle(func: () => void, limit: number): () => void {
@@ -35,6 +38,7 @@ function throttle(func: () => void, limit: number): () => void {
 }
 
 export const WorldMap: FC = () => {
+  const [loading, setLoading] = useState(true);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -44,7 +48,7 @@ export const WorldMap: FC = () => {
     if (!container || !canvas) return;
 
     // prepare map and pins
-    const mapJson = JSON.parse(getMapJSON({ height: 100, grid: 'diagonal' }));
+    const mapJson = JSON.parse(getMapJSON({ height: MAP_HEIGHT, grid: 'diagonal' }));
     const map = Doter({ map: mapJson });
     coords.forEach(([lat, lng]) => map.addPin({ lat, lng, svgOptions: { color: '#d6ff79', radius: RADIUS } }));
 
@@ -106,6 +110,7 @@ export const WorldMap: FC = () => {
 
     // initial draw
     draw();
+    setLoading(false);
 
     // throttled resize handler
     const handleResize = throttle(draw, 100);
@@ -118,7 +123,30 @@ export const WorldMap: FC = () => {
 
   return (
     <Container ref={containerRef}>
-      <canvas ref={canvasRef} />
+      {loading && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: 'transparent',
+            zIndex: 10,
+          }}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+            <CircularProgress />
+            <Typography variant="body1" color="textSecondary">
+              Loading map...
+            </Typography>
+          </div>
+        </div>
+      )}
+      <canvas ref={canvasRef} style={{ visibility: loading ? 'hidden' : 'visible' }} />
     </Container>
   );
 };
