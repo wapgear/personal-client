@@ -35,15 +35,15 @@ export const Buzzwords = () => {
       }}
     >
       <Typography variant="h5" letterSpacing="-0.05em" fontWeight="700">
-        BUZZWORDS
+        TECH STACK
       </Typography>
-      <Divider variant="fullWidth" sx={{ backgroundColor: '#000', mt: '-4px' }} />
+      <Divider variant="fullWidth" sx={{ backgroundColor: '#000' }} />
       <Box
         sx={{
           py: 2,
         }}
       >
-        Tech stack (in not a particular order): {buzzwords.join(', ')}
+        {buzzwords.join(', ')}
       </Box>
     </Box>
   );

@@ -1,5 +1,4 @@
-import Grid from '@mui/material/Grid2';
-import { Box, Button, Theme, Typography, useMediaQuery } from '@mui/material';
+import { Box, Button, Theme, Typography, useMediaQuery, Grid } from '@mui/material';
 
 import { Actions, AvatarContainer, InfoContainer, Social } from './Landing.styles';
 import { useCallback } from 'react';

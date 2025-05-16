@@ -1,18 +1,14 @@
-import { Box, Typography } from '@mui/material';
+import { Box, Link, Typography } from '@mui/material';
 
 export const Title = () => {
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-      }}
-    >
-      <Typography variant="h5" fontSize="24px" textTransform="uppercase" fontWeight={700}>
-        Anton Izmailov
-      </Typography>
-      <Typography variant="h5" fontSize="16px" mt="-8px">
+    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
+        <Typography variant="h5" fontSize="32px" textTransform="uppercase" fontWeight={700} letterSpacing="-0.05em">
+          Anton Izmailov
+        </Typography>
+      </Link>
+      <Typography variant="h5" fontSize="16px">
         Software Engineer
       </Typography>
       <Box
@@ -21,16 +17,10 @@ export const Title = () => {
           alignItems: 'center',
           justifyContent: 'center',
           gap: 1.5,
-          '& a': {
-            color: 'inherit',
-            textDecoration: 'none',
-            '&:hover': {
-              textDecoration: 'underline',
-            },
-          },
+          '& a': { color: 'inherit', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } },
         }}
       >
-        <Typography>Tbilisi, Georgia</Typography>-
+        <Typography>Madrid, Spain</Typography>-
         <Typography>
           <a target="_blank" href="https://t.me/izmailovdev">
             @izmailovdev

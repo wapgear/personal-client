@@ -100,7 +100,9 @@ export const theme = createTheme({
   },
   colorSchemes,
   typography: {
-    fontFamily: 'Gilroy, Roboto, -apple-system, BlinkMacSystemFont, sans-serif',
+    fontFamily: 'Roboto, -apple-system, BlinkMacSystemFont, sans-serif',
   },
-  cssVariables: true,
+  cssVariables: {
+    colorSchemeSelector: 'class',
+  },
 });

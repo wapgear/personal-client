@@ -25,7 +25,6 @@ export const InfoContainer = styled.div`
     font-feature-settings:
       'clig' off,
       'liga' off;
-    font-family: 'Gilroy', sans-serif;
     font-size: 36px;
     font-style: normal;
     font-weight: 500;

@@ -17,11 +17,8 @@ export const CVPage = () => {
         width: '100%',
         gap: 2,
         p: 2,
-        maxWidth: '1280px',
+        maxWidth: '992px',
         margin: '0 auto',
-        '& *': {
-          fontFamily: "'Georgia', serif !important",
-        },
       }}
     >
       <Title />
@@ -29,13 +26,7 @@ export const CVPage = () => {
       <Employment />
       <Education />
       <Buzzwords />
-      <Box
-        sx={{
-          '@media print': {
-            display: 'none',
-          },
-        }}
-      >
+      <Box sx={{ '@media print': { display: 'none' } }}>
         <SwitchMode />
         <Actions />
       </Box>
@@ -45,15 +36,7 @@ export const CVPage = () => {
 
 const Actions = () => {
   return (
-    <Box
-      sx={{
-        width: '100%',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        gap: 2,
-      }}
-    >
+    <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 2 }}>
       <Button color="primary" onClick={() => window.print()}>
         DOWNLOAD PDF
       </Button>
