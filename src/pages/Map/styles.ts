@@ -1,11 +1,12 @@
 import styled from '@emotion/styled';
 
 export const Container = styled('div')`
-  width: 80vw;
+  width: 100%;
+  max-width: 100vw;
 
-  svg {
+  canvas {
+    display: block;
     width: 100%;
     height: auto;
-    aspect-ratio: 168/80;
   }
 `;
