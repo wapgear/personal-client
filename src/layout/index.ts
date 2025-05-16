@@ -1,1 +1,1 @@
-export * from "./ExclusiveLayout";
+export * from './ExclusiveLayout';

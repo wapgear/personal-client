@@ -10,7 +10,7 @@ export interface Map {
   X_RANGE: number;
   Y_RANGE: number;
   region: Region;
-  grid: "vertical" | "diagonal";
+  grid: 'vertical' | 'diagonal';
   width: number;
   height: number;
   ystep: number;
@@ -21,7 +21,7 @@ export interface MapSettings {
   width?: number;
   countries?: string[];
   region?: Region;
-  grid?: "vertical" | "diagonal";
+  grid?: 'vertical' | 'diagonal';
 }
 
 export interface Settings extends MapSettings {
@@ -42,7 +42,7 @@ export interface Pin {
 }
 
 export interface SvgSettings {
-  shape?: "circle" | "hexagon";
+  shape?: 'circle' | 'hexagon';
   color?: string;
   backgroundColor?: string;
   radius?: number;

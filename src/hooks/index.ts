@@ -1,3 +1,3 @@
-export { useIsOnTop } from "./useIsOnTop";
-export { useScript } from "./useScript";
-export { useLockBodyScroll } from "./useLockBodyScroll";
+export { useIsOnTop } from './useIsOnTop';
+export { useScript } from './useScript';
+export { useLockBodyScroll } from './useLockBodyScroll';

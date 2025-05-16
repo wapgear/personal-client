@@ -15,7 +15,6 @@ export const Value = styled('div')`
   font-feature-settings:
     'clig' off,
     'liga' off;
-  font-family: 'Gilroy', sans-serif;
   font-size: 10px;
   font-style: normal;
   font-weight: 400;
@@ -23,9 +22,7 @@ export const Value = styled('div')`
   letter-spacing: 0.25px;
 `;
 
-export const SwitchModeContainer = styled('div')<{
-  isNight: boolean;
-}>`
+export const SwitchModeContainer = styled('div')<{ isNight: boolean }>`
   cursor: pointer;
   position: fixed;
   right: 24px;

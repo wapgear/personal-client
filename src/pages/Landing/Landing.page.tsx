@@ -1,5 +1,4 @@
-import Grid from '@mui/material/Grid2';
-import { Box, Button, Theme, Typography, useMediaQuery } from '@mui/material';
+import { Box, Button, Theme, Typography, useMediaQuery, Grid } from '@mui/material';
 
 import { Actions, AvatarContainer, InfoContainer, Social } from './Landing.styles';
 import { useCallback } from 'react';
@@ -30,12 +29,12 @@ export const LandingPage = () => {
             <Typography variant="h1">
               Hi there, I'm <span>Anton</span> – Your Expert Web & Electron App Developer
             </Typography>
-            <Typography variant="body1" paragraph>
+            <Typography variant="body1" component="p">
               With a mastery of <span>Frontend</span>, <span>Backend</span>, <span>DevOps</span> &{' '}
               <span>ElectronJS</span>, I thrive on crafting exceptional digital experiences. This platform is my
               innovation playground where I refine my skills to <span>perfection</span>.
             </Typography>
-            <Typography variant="body1" paragraph>
+            <Typography variant="body1" component="p">
               That website is not just a regular landing. It's a <span>PLAYGROUND</span> where I try things I love:
               <br />- <span>ElectronJS</span> with using hardware things in Web Apps
               <br />- <span>Elixir</span>
@@ -43,7 +42,7 @@ export const LandingPage = () => {
               <br />- <span>AI</span> tools like <span>ChatGPT</span>, <span>SD</span> and a lot more
               <br />
             </Typography>
-            <Typography variant="body1" paragraph>
+            <Typography variant="body1" component="p">
               Got an ambitious project? Let's join forces and bring your ideas to life. Together, we'll create something{' '}
               <span>extraordinary</span>! 💡
             </Typography>

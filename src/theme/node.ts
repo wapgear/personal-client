@@ -1,6 +1,5 @@
-import { CssVarsThemeOptions } from '@mui/material/styles';
+import { CssVarsThemeOptions, createTheme } from '@mui/material/styles';
 import type { LinkProps } from '@mui/material/Link';
-import { experimental_extendTheme } from '@mui/material';
 import { LinkBehavior } from './LinkBehavior.tsx';
 
 const colorSchemes: CssVarsThemeOptions['colorSchemes'] = {
@@ -47,7 +46,7 @@ const colorSchemes: CssVarsThemeOptions['colorSchemes'] = {
   },
 };
 
-export const theme = experimental_extendTheme({
+export const theme = createTheme({
   components: {
     MuiLink: {
       defaultProps: {
@@ -101,6 +100,7 @@ export const theme = experimental_extendTheme({
   },
   colorSchemes,
   typography: {
-    fontFamily: 'Gilroy, Roboto, -apple-system, BlinkMacSystemFont, sans-serif',
+    fontFamily: 'Roboto, -apple-system, BlinkMacSystemFont, sans-serif',
   },
+  cssVariables: true,
 });

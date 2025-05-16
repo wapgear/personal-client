@@ -2,18 +2,7 @@ import { FC, ReactNode } from 'react';
 import { Box, Typography } from '@mui/material';
 
 export const List: FC<{ children: ReactNode; gap?: number }> = ({ children, gap = 4 }) => {
-  return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap,
-        py: 2,
-      }}
-    >
-      {children}
-    </Box>
-  );
+  return <Box sx={{ display: 'flex', flexDirection: 'column', gap, py: 2 }}>{children}</Box>;
 };
 
 interface ListItemProps {
@@ -37,14 +26,8 @@ export const ListItem: FC<ListItemProps> = ({
 }) => {
   return (
     <Box>
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          width: '100%',
-        }}
-      >
-        <Box sx={{ flex: 1, pl: 1.5 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+        <Box sx={{ flex: 1, pl: 1.5, pb: 1.5 }}>
           <Typography variant="body1" fontSize="18px">
             {position}
             {company ? <>, {company}</> : ''}
