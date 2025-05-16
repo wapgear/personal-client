@@ -18,6 +18,22 @@ const coords: Array<[number, number]> = [
   [41.06277298412274, 29.01321470305],
 ];
 
+const RADIUS = 0.1;
+
+// throttle helper to limit how often a function can run
+function throttle(func: () => void, limit: number): () => void {
+  let inThrottle = false;
+  return () => {
+    if (!inThrottle) {
+      func();
+      inThrottle = true;
+      setTimeout(() => {
+        inThrottle = false;
+      }, limit);
+    }
+  };
+}
+
 export const WorldMap: FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -30,59 +46,74 @@ export const WorldMap: FC = () => {
     // prepare map and pins
     const mapJson = JSON.parse(getMapJSON({ height: 100, grid: 'diagonal' }));
     const map = Doter({ map: mapJson });
-    coords.forEach(([lat, lng]) => map.addPin({ lat, lng, svgOptions: { color: '#d6ff79', radius: 0.15 } }));
+    coords.forEach(([lat, lng]) => map.addPin({ lat, lng, svgOptions: { color: '#d6ff79', radius: RADIUS } }));
 
     const rawPoints = map.getPoints();
     const WIDTH = map.image.width;
     const HEIGHT = map.image.height;
 
-    // sizing
-    const containerWidth = container.offsetWidth;
-    const scale = containerWidth / WIDTH;
-    const canvasHeight = HEIGHT * scale;
-    const dpr = window.devicePixelRatio || 1;
+    // draw function
+    const draw = () => {
+      const containerWidth = container.offsetWidth;
+      const containerHeight = container.offsetHeight;
+      const scale = Math.min(containerWidth / WIDTH, containerHeight / HEIGHT);
+      const canvasWidth = WIDTH * scale;
+      const canvasHeight = HEIGHT * scale;
+      const dpr = window.devicePixelRatio || 1;
 
-    // configure canvas for high DPI
-    canvas.width = containerWidth * dpr;
-    canvas.height = canvasHeight * dpr;
-    canvas.style.width = `${containerWidth}px`;
-    canvas.style.height = `${canvasHeight}px`;
+      // configure canvas for high DPI
+      canvas.width = canvasWidth * dpr;
+      canvas.height = canvasHeight * dpr;
+      canvas.style.width = `${canvasWidth}px`;
+      canvas.style.height = `${canvasHeight}px`;
 
-    const ctx = canvas.getContext('2d')!;
-    ctx.save();
-    ctx.scale(dpr * scale, dpr * scale);
+      const ctx = canvas.getContext('2d')!;
+      ctx.save();
+      ctx.scale(dpr * scale, dpr * scale);
 
-    // draw hex cells
-    const seen = new Set<string>();
-    rawPoints.forEach((pt: any) => {
-      const key = `${pt.x}:${pt.y}`;
-      if (seen.has(key)) return;
-      seen.add(key);
-      const r = pt.svgOptions?.radius || 0.15;
-      const c = pt.svgOptions?.color || '#7e7e7e';
-      const sq3r = Math.sqrt(3) * r;
-      ctx.beginPath();
-      ctx.moveTo(pt.x + sq3r, pt.y - r);
-      ctx.lineTo(pt.x + sq3r, pt.y + r);
-      ctx.lineTo(pt.x, pt.y + 2 * r);
-      ctx.lineTo(pt.x - sq3r, pt.y + r);
-      ctx.lineTo(pt.x - sq3r, pt.y - r);
-      ctx.closePath();
-      ctx.fillStyle = c;
-      ctx.fill();
-    });
-
-    // draw pins
-    rawPoints
-      .filter((pt: any) => pt.data)
-      .forEach((pt: any) => {
+      // draw hex cells
+      const seen = new Set<string>();
+      rawPoints.forEach((pt: any) => {
+        const key = `${pt.x}:${pt.y}`;
+        if (seen.has(key)) return;
+        seen.add(key);
+        const r = pt.svgOptions?.radius || RADIUS;
+        const c = pt.svgOptions?.color || '#7e7e7e';
+        const sq3r = Math.sqrt(3) * r;
         ctx.beginPath();
-        ctx.arc(pt.x, pt.y, pt.svgOptions.radius || 0.15, 0, Math.PI * 2);
-        ctx.fillStyle = pt.svgOptions.color;
+        ctx.moveTo(pt.x + sq3r, pt.y - r);
+        ctx.lineTo(pt.x + sq3r, pt.y + r);
+        ctx.lineTo(pt.x, pt.y + 2 * r);
+        ctx.lineTo(pt.x - sq3r, pt.y + r);
+        ctx.lineTo(pt.x - sq3r, pt.y - r);
+        ctx.closePath();
+        ctx.fillStyle = c;
         ctx.fill();
       });
 
-    ctx.restore();
+      // draw pins
+      rawPoints
+        .filter((pt: any) => pt.data)
+        .forEach((pt: any) => {
+          ctx.beginPath();
+          ctx.arc(pt.x, pt.y, pt.svgOptions.radius || RADIUS, 0, Math.PI * 2);
+          ctx.fillStyle = pt.svgOptions.color;
+          ctx.fill();
+        });
+
+      ctx.restore();
+    };
+
+    // initial draw
+    draw();
+
+    // throttled resize handler
+    const handleResize = throttle(draw, 100);
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
   }, []);
 
   return (

@@ -1,12 +1,13 @@
 import styled from '@emotion/styled';
 
 export const Container = styled('div')`
-  width: 100%;
-  max-width: 100vw;
+  width: calc(100vw - 48px);
+  height: calc(100vh - 216px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
 
   canvas {
     display: block;
-    width: 100%;
-    height: auto;
   }
 `;
