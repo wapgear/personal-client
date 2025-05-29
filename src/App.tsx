@@ -1,7 +1,7 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { StrictMode, useMemo } from 'react';
 import { LandingLayoutV3 } from './layout/LandingLayoutV3/LandingLayoutV3';
-import { CssBaseline, Experimental_CssVarsProvider, ThemeProvider } from '@mui/material';
+import { CssBaseline, ThemeProvider } from '@mui/material';
 import { theme } from './theme';
 
 const router = createBrowserRouter([
