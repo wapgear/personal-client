@@ -92,17 +92,40 @@ jobs:
           echo "🌐 Domain: ${SUBDOMAIN_NAME}.${DOMAIN_NAME}"
           echo "📍 Region: ${{ env.AWS_REGION }}"
 
-          # Check if stack exists
+          # Check if stack exists and its state
           if aws cloudformation describe-stacks --stack-name "$STACK_NAME" --region ${{ env.AWS_REGION }} >/dev/null 2>&1; then
-            echo "📦 Stack exists, updating..."
-            OPERATION="update"
+            STACK_STATUS=$(aws cloudformation describe-stacks \
+              --stack-name "$STACK_NAME" \
+              --region ${{ env.AWS_REGION }} \
+              --query 'Stacks[0].StackStatus' \
+              --output text)
+            
+            echo "📦 Stack exists with status: $STACK_STATUS"
+            
+            if [ "$STACK_STATUS" = "ROLLBACK_COMPLETE" ] || [ "$STACK_STATUS" = "CREATE_FAILED" ] || [ "$STACK_STATUS" = "UPDATE_ROLLBACK_COMPLETE" ]; then
+              echo "🗑️  Stack is in $STACK_STATUS state, deleting and recreating..."
+              aws cloudformation delete-stack \
+                --stack-name "$STACK_NAME" \
+                --region ${{ env.AWS_REGION }}
+              
+              echo "⏳ Waiting for stack deletion to complete..."
+              aws cloudformation wait stack-delete-complete \
+                --stack-name "$STACK_NAME" \
+                --region ${{ env.AWS_REGION }}
+              
+              echo "✅ Stack deleted successfully"
+              OPERATION="create"
+            else
+              echo "📦 Stack exists, updating..."
+              OPERATION="update"
+            fi
           else
             echo "🆕 Creating new stack..."
             OPERATION="create"
           fi
 
           aws cloudformation deploy \
-            --template-file aws/cloudformation-template-no-ssl.yml \
+            --template-file aws/cloudformation-template-fixed.yml \
             --stack-name "$STACK_NAME" \
             --parameter-overrides \
               DomainName="$DOMAIN_NAME" \
