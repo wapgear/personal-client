@@ -1,11 +1,15 @@
 import styled from '@emotion/styled';
 
 export const Container = styled('div')`
-  width: 80vw;
+  position: relative;
+  width: calc(100vw);
+  margin-left: -24px;
+  height: calc(100vh - 216px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
 
-  svg {
-    width: 100%;
-    height: auto;
-    aspect-ratio: 168/80;
+  canvas {
+    display: block;
   }
 `;

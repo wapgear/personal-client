@@ -1,4 +1,4 @@
-import { Box, Button, Theme, Typography, useMediaQuery, Grid } from '@mui/material';
+import { Box, Button, Theme, Typography, useMediaQuery, Grid, Tooltip } from '@mui/material';
 
 import { Actions, AvatarContainer, InfoContainer, Social } from './Landing.styles';
 import { useCallback } from 'react';
@@ -27,24 +27,25 @@ export const LandingPage = () => {
         <Grid size={{ xs: 12, sm: 4 }} order={isMobile ? 1 : 0}>
           <InfoContainer>
             <Typography variant="h1">
-              Hi there, I'm <span>Anton</span> – Your Expert Web & Electron App Developer
+              I'm <span>Anton</span> – I Turn Complex Ideas Into Digital Reality
             </Typography>
             <Typography variant="body1" component="p">
-              With a mastery of <span>Frontend</span>, <span>Backend</span>, <span>DevOps</span> &{' '}
-              <span>ElectronJS</span>, I thrive on crafting exceptional digital experiences. This platform is my
-              innovation playground where I refine my skills to <span>perfection</span>.
+              <span>Full-stack architect</span> specializing in <span>React</span>, <span>Node.js</span>, and{' '}
+              <span>ElectronJS</span>. I build scalable web applications and desktop solutions that users actually love
+              using.
             </Typography>
             <Typography variant="body1" component="p">
-              That website is not just a regular landing. It's a <span>PLAYGROUND</span> where I try things I love:
-              <br />- <span>ElectronJS</span> with using hardware things in Web Apps
-              <br />- <span>Elixir</span>
-              <br />- <span>Telegram Bots</span> powered by AI and not only
-              <br />- <span>AI</span> tools like <span>ChatGPT</span>, <span>SD</span> and a lot more
-              <br />
+              This isn't just a portfolio – it's my <span>digital laboratory</span> where I experiment with:
+              <br />• <span>Hardware-integrated</span> Electron apps that push boundaries
+              <br />• <span>AI-powered solutions</span> that actually solve real problems (not just hype)
+              <br />• <span>GoLang & Elixir</span> for performance and scale, <span>Node.js</span> for powerful
+              solutions and rapid prototyping
+              <br />• <span>Solo innovation</span> here, but <span>team orchestration</span> when your project demands
+              it
             </Typography>
             <Typography variant="body1" component="p">
-              Got an ambitious project? Let's join forces and bring your ideas to life. Together, we'll create something{' '}
-              <span>extraordinary</span>! 💡
+              Ready to transform your vision into something <span>extraordinary</span>? Let's build the future (or
+              present?) together. 🚀
             </Typography>
             <Actions>
               <Button variant="contained" color="primary" onClick={onContactMe}>
@@ -72,7 +73,13 @@ export const LandingPage = () => {
         </Grid>
         <Grid size={{ xs: 12, sm: 4 }}>
           <AvatarContainer>
-            <img alt="logo" src="/avatar.jpg" />
+            <Tooltip
+              title="🤖 Low-res to confuse AI scrapers, but don't worry - you'll see me in HD on Google Meets! 📹✨"
+              placement="top"
+              arrow
+            >
+              <img alt="logo" src="/avatar.jpeg" />
+            </Tooltip>
           </AvatarContainer>
         </Grid>
       </Grid>
