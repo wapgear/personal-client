@@ -73,8 +73,11 @@ Resources:
       SubjectAlternativeNames:
         - !Ref DomainName
       ValidationMethod: DNS
-      # Removed DomainValidationOptions to prevent hanging
-      # The certificate will need to be validated manually after stack creation
+      DomainValidationOptions:
+        - DomainName: !Sub '${SubdomainName}.${DomainName}'
+          HostedZoneId: !Ref HostedZone
+        - DomainName: !Ref DomainName
+          HostedZoneId: !Ref HostedZone
 
   # CloudFront Origin Access Control
   OriginAccessControl:

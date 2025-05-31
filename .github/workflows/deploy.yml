@@ -102,7 +102,7 @@ jobs:
           fi
 
           aws cloudformation deploy \
-            --template-file aws/cloudformation-template.yml \
+            --template-file aws/cloudformation-template-no-ssl.yml \
             --stack-name "$STACK_NAME" \
             --parameter-overrides \
               DomainName="$DOMAIN_NAME" \
@@ -110,6 +110,10 @@ jobs:
             --capabilities CAPABILITY_IAM \
             --region ${{ env.AWS_REGION }} \
             --no-fail-on-empty-changeset
+
+          # Note: Using no-SSL template for faster initial deployment
+          # To enable SSL later, switch to aws/cloudformation-template.yml
+          # and manually validate the SSL certificate in AWS Certificate Manager
 
           # Get stack outputs
           echo "📊 Retrieving stack outputs..."
