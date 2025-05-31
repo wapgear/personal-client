@@ -46,8 +46,8 @@ read -p "Enter your domain name (e.g., yourdomain.com): " DOMAIN_NAME
 read -p "Enter subdomain (default: www): " SUBDOMAIN_NAME
 SUBDOMAIN_NAME=${SUBDOMAIN_NAME:-www}
 
-read -p "Enter AWS region (default: us-east-1): " AWS_REGION
-AWS_REGION=${AWS_REGION:-us-east-1}
+read -p "Enter AWS region (default: eu-west-1): " AWS_REGION
+AWS_REGION=${AWS_REGION:-eu-west-1}
 
 read -p "Enter stack name (default: personal-website): " STACK_NAME
 STACK_NAME=${STACK_NAME:-personal-website}
