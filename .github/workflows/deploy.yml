@@ -77,10 +77,12 @@ jobs:
 
       - name: Deploy CloudFormation stack
         id: deploy-stack
+        timeout-minutes: 60 # Add explicit timeout
         run: |
           STACK_NAME="${{ secrets.STACK_NAME || 'personal-website' }}"
           DOMAIN_NAME="${{ secrets.DOMAIN_NAME }}"
           SUBDOMAIN_NAME="${{ secrets.SUBDOMAIN_NAME || 'www' }}"
+          ENABLE_SSL="${{ secrets.ENABLE_SSL || 'false' }}"
 
           if [ -z "$DOMAIN_NAME" ]; then
             echo "❌ Error: DOMAIN_NAME secret is required"
@@ -90,7 +92,17 @@ jobs:
 
           echo "🚀 Deploying CloudFormation stack: $STACK_NAME"
           echo "🌐 Domain: ${SUBDOMAIN_NAME}.${DOMAIN_NAME}"
+          echo "🔒 SSL Enabled: $ENABLE_SSL"
           echo "📍 Region: ${{ env.AWS_REGION }}"
+
+          # Choose template based on SSL setting
+          if [ "$ENABLE_SSL" = "true" ]; then
+            TEMPLATE_FILE="aws/cloudformation-template-ssl.yml"
+            echo "📋 Using SSL-enabled template"
+          else
+            TEMPLATE_FILE="aws/cloudformation-template-simple.yml"
+            echo "📋 Using simple template (no SSL)"
+          fi
 
           # Check if stack exists and its state
           if aws cloudformation describe-stacks --stack-name "$STACK_NAME" --region ${{ env.AWS_REGION }} >/dev/null 2>&1; then
@@ -124,19 +136,103 @@ jobs:
             OPERATION="create"
           fi
 
+          # Deploy with the appropriate template and better error handling
+          echo "🔧 Starting CloudFormation deployment..."
+
+          # First, validate the template
+          echo "🔍 Validating CloudFormation template..."
+          aws cloudformation validate-template \
+            --template-body file://$TEMPLATE_FILE \
+            --region ${{ env.AWS_REGION }}
+
+          if [ $? -ne 0 ]; then
+            echo "❌ Template validation failed!"
+            exit 1
+          fi
+
+          echo "✅ Template validation successful"
+
+          # Deploy the stack with explicit timeout and monitoring
+          echo "🚀 Deploying stack (this may take 15-30 minutes for CloudFront)..."
+
+          # Prepare parameters based on template
+          if [ "$ENABLE_SSL" = "true" ]; then
+            PARAMETERS="DomainName=$DOMAIN_NAME SubdomainName=$SUBDOMAIN_NAME EnableSSL=true CertificateValidationMethod=DNS"
+            echo "🔒 SSL certificate will be created and require validation"
+          else
+            PARAMETERS="DomainName=$DOMAIN_NAME SubdomainName=$SUBDOMAIN_NAME"
+          fi
+
           aws cloudformation deploy \
-            --template-file aws/cloudformation-template-fixed.yml \
+            --template-file $TEMPLATE_FILE \
             --stack-name "$STACK_NAME" \
-            --parameter-overrides \
-              DomainName="$DOMAIN_NAME" \
-              SubdomainName="$SUBDOMAIN_NAME" \
+            --parameter-overrides $PARAMETERS \
             --capabilities CAPABILITY_IAM \
             --region ${{ env.AWS_REGION }} \
-            --no-fail-on-empty-changeset
+            --no-fail-on-empty-changeset \
+            --timeout-in-minutes 45 &
 
-          # Note: Using no-SSL template for faster initial deployment
-          # To enable SSL later, switch to aws/cloudformation-template.yml
-          # and manually validate the SSL certificate in AWS Certificate Manager
+          # Store the deployment PID for monitoring
+          DEPLOY_PID=$!
+
+          # Monitor the deployment with periodic status updates
+          echo "📊 Monitoring deployment progress..."
+          COUNTER=0
+          while kill -0 $DEPLOY_PID 2>/dev/null; do
+            sleep 60  # Check every minute
+            COUNTER=$((COUNTER + 1))
+            
+            # Get current stack status
+            if aws cloudformation describe-stacks --stack-name "$STACK_NAME" --region ${{ env.AWS_REGION }} >/dev/null 2>&1; then
+              CURRENT_STATUS=$(aws cloudformation describe-stacks \
+                --stack-name "$STACK_NAME" \
+                --region ${{ env.AWS_REGION }} \
+                --query 'Stacks[0].StackStatus' \
+                --output text)
+              echo "⏱️  [$COUNTER min] Current status: $CURRENT_STATUS"
+              
+              # Check for failed states
+              if [[ "$CURRENT_STATUS" == *"FAILED"* ]] || [[ "$CURRENT_STATUS" == *"ROLLBACK"* ]]; then
+                echo "❌ Stack deployment failed with status: $CURRENT_STATUS"
+                echo "🔍 Checking stack events for errors..."
+                aws cloudformation describe-stack-events \
+                  --stack-name "$STACK_NAME" \
+                  --region ${{ env.AWS_REGION }} \
+                  --query 'StackEvents[?ResourceStatus==`CREATE_FAILED` || ResourceStatus==`UPDATE_FAILED`].[LogicalResourceId,ResourceStatusReason]' \
+                  --output table
+                kill $DEPLOY_PID 2>/dev/null
+                exit 1
+              fi
+            fi
+            
+            # Timeout after 40 minutes
+            if [ $COUNTER -ge 40 ]; then
+              echo "⏰ Deployment timeout reached (40 minutes)"
+              echo "🔍 Current stack status:"
+              aws cloudformation describe-stacks \
+                --stack-name "$STACK_NAME" \
+                --region ${{ env.AWS_REGION }} \
+                --query 'Stacks[0].StackStatus' \
+                --output text
+              kill $DEPLOY_PID 2>/dev/null
+              exit 1
+            fi
+          done
+
+          # Wait for the deployment command to complete
+          wait $DEPLOY_PID
+          DEPLOY_EXIT_CODE=$?
+
+          if [ $DEPLOY_EXIT_CODE -ne 0 ]; then
+            echo "❌ CloudFormation deployment failed with exit code: $DEPLOY_EXIT_CODE"
+            echo "🔍 Checking stack events for errors..."
+            aws cloudformation describe-stack-events \
+              --stack-name "$STACK_NAME" \
+              --region ${{ env.AWS_REGION }} \
+              --query 'StackEvents[?ResourceStatus==`CREATE_FAILED` || ResourceStatus==`UPDATE_FAILED`].[LogicalResourceId,ResourceStatusReason]' \
+              --output table
+            exit 1
+          fi
 
           # Get stack outputs
           echo "📊 Retrieving stack outputs..."
@@ -159,24 +255,54 @@ jobs:
             --query 'Stacks[0].Outputs[?OutputKey==`WebsiteURL`].OutputValue' \
             --output text)
 
+          CLOUDFRONT_URL=$(aws cloudformation describe-stacks \
+            --stack-name "$STACK_NAME" \
+            --region ${{ env.AWS_REGION }} \
+            --query 'Stacks[0].Outputs[?OutputKey==`CloudFrontURL`].OutputValue' \
+            --output text)
+
           NAME_SERVERS=$(aws cloudformation describe-stacks \
             --stack-name "$STACK_NAME" \
             --region ${{ env.AWS_REGION }} \
             --query 'Stacks[0].Outputs[?OutputKey==`NameServers`].OutputValue' \
             --output text)
 
+          # Get SSL certificate ARN if SSL is enabled
+          if [ "$ENABLE_SSL" = "true" ]; then
+            SSL_CERT_ARN=$(aws cloudformation describe-stacks \
+              --stack-name "$STACK_NAME" \
+              --region ${{ env.AWS_REGION }} \
+              --query 'Stacks[0].Outputs[?OutputKey==`SSLCertificateArn`].OutputValue' \
+              --output text 2>/dev/null || echo "Not available")
+            echo "ssl-cert-arn=$SSL_CERT_ARN" >> $GITHUB_OUTPUT
+          fi
+
           # Set outputs
           echo "s3-bucket=$S3_BUCKET" >> $GITHUB_OUTPUT
           echo "cloudfront-id=$CLOUDFRONT_ID" >> $GITHUB_OUTPUT
           echo "website-url=$WEBSITE_URL" >> $GITHUB_OUTPUT
+          echo "cloudfront-url=$CLOUDFRONT_URL" >> $GITHUB_OUTPUT
           echo "nameservers=$NAME_SERVERS" >> $GITHUB_OUTPUT
+          echo "ssl-enabled=$ENABLE_SSL" >> $GITHUB_OUTPUT
 
           echo ""
           echo "✅ Infrastructure deployment completed!"
           echo "📦 S3 Bucket: $S3_BUCKET"
           echo "🌐 CloudFront Distribution: $CLOUDFRONT_ID"
           echo "🔗 Website URL: $WEBSITE_URL"
+          echo "🔗 CloudFront URL: $CLOUDFRONT_URL"
           echo "🌍 Name Servers: $NAME_SERVERS"
+
+          if [ "$ENABLE_SSL" = "true" ]; then
+            echo "🔒 SSL Certificate ARN: $SSL_CERT_ARN"
+            echo ""
+            echo "🚨 IMPORTANT: SSL Certificate requires validation!"
+            echo "Go to AWS Certificate Manager and validate the certificate"
+          fi
+
+          echo ""
+          echo "💡 Your site is immediately accessible via CloudFront URL"
+          echo "💡 Custom domain will work after DNS propagation (up to 48 hours)"
 
   # Application Deployment Job
   deploy-app:
@@ -244,11 +370,41 @@ jobs:
           echo "=================================="
           echo "📦 S3 Bucket: ${{ needs.deploy-infrastructure.outputs.s3-bucket }}"
           echo "🌐 CloudFront ID: ${{ needs.deploy-infrastructure.outputs.cloudfront-id }}"
+          echo "🔗 CloudFront URL: ${{ needs.deploy-infrastructure.outputs.cloudfront-url }}"
           echo "🔗 Website URL: ${{ needs.deploy-infrastructure.outputs.website-url }}"
           echo ""
-          echo "🔧 DNS Configuration:"
+          echo "🚀 IMMEDIATE ACCESS:"
+          echo "Your site is live now at: ${{ needs.deploy-infrastructure.outputs.cloudfront-url }}"
+          echo ""
+
+          if [ "${{ needs.deploy-infrastructure.outputs.ssl-enabled }}" = "true" ]; then
+            echo "🔒 SSL CERTIFICATE INFORMATION:"
+            echo "==============================="
+            echo "Certificate ARN: ${{ needs.deploy-infrastructure.outputs.ssl-cert-arn }}"
+            echo ""
+            echo "🚨 IMPORTANT: Certificate Validation Required!"
+            echo "1. Go to AWS Certificate Manager in the AWS Console"
+            echo "2. Find your certificate and complete DNS validation"
+            echo "3. Add the CNAME records to your DNS provider"
+            echo ""
+            echo "🔗 Custom Domain URL (after validation): ${{ needs.deploy-infrastructure.outputs.website-url }}"
+            echo ""
+          fi
+
+          echo "🔧 DNS Configuration for Custom Domain:"
           echo "Update your Namecheap nameservers to:"
           echo "${{ needs.deploy-infrastructure.outputs.nameservers }}"
           echo ""
           echo "⏱️  DNS propagation may take up to 48 hours"
-          echo "🌍 Your site will be live at: ${{ needs.deploy-infrastructure.outputs.website-url }}"
+
+          if [ "${{ needs.deploy-infrastructure.outputs.ssl-enabled }}" = "true" ]; then
+            echo ""
+            echo "📋 Next Steps for SSL:"
+            echo "1. Validate SSL certificate in AWS Certificate Manager"
+            echo "2. Update domain nameservers"
+            echo "3. Wait for DNS propagation"
+            echo "4. Your site will be accessible via HTTPS at your custom domain"
+          else
+            echo ""
+            echo "💡 To enable SSL later, set the ENABLE_SSL secret to 'true' and redeploy"
+          fi

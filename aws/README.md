@@ -1,246 +1,318 @@
-# AWS Static Website Hosting Setup
+# AWS Infrastructure Deployment Guide
 
-This guide will help you deploy your React application to AWS using S3, CloudFront, and Route 53 with your custom Namecheap domain.
+This directory contains CloudFormation templates and deployment scripts for hosting a static website on AWS with S3, CloudFront, and Route 53.
 
-## Architecture Overview
+## 📁 Files Overview
 
-```
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   Namecheap     │    │   AWS Route 53   │    │   CloudFront    │
-│   (Domain)      │───▶│   (DNS)          │───▶│   (CDN)         │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
-                                                         │
-                                                         ▼
-                                               ┌─────────────────┐
-                                               │   S3 Bucket     │
-                                               │   (Static Site) │
-                                               └─────────────────┘
-```
+### CloudFormation Templates
 
-## Features
+- `cloudformation-template-simple.yml` - Basic hosting without SSL (fastest deployment)
+- `cloudformation-template-ssl.yml` - Full hosting with SSL certificate support
+- `cloudformation-template-reliable.yml` - Legacy template (use simple or ssl instead)
 
-- ✅ **S3 Static Website Hosting** - Cost-effective hosting
-- ✅ **CloudFront CDN** - Global content delivery and caching
-- ✅ **Custom Domain** - Your Namecheap domain with HTTPS
-- ✅ **SSL Certificate** - Automatic SSL via AWS Certificate Manager
-- ✅ **GitHub Actions** - Automated deployment pipeline
-- ✅ **SPA Support** - Proper routing for React Router
+### Deployment Scripts
 
-## Prerequisites
+- `deploy-with-ssl.sh` - Comprehensive deployment script with SSL support
+- `test-deploy.sh` - Test deployment script for validation
+- `debug-stack.sh` - Debug existing CloudFormation stacks
 
-1. **AWS Account** with appropriate permissions
-2. **AWS CLI** installed and configured
-3. **Domain** registered with Namecheap
-4. **GitHub Repository** for your project
+## 🚀 Quick Start
 
-## Step 1: Install AWS CLI
+### Option 1: Simple Deployment (No SSL)
 
-### macOS
+For fastest deployment without custom domain SSL:
 
 ```bash
-brew install awscli
+# Make scripts executable
+chmod +x aws/*.sh
+
+# Deploy without SSL
+./aws/deploy-with-ssl.sh yourdomain.com false
 ```
 
-### Linux/Windows
+### Option 2: SSL-Enabled Deployment
 
-Follow the [official AWS CLI installation guide](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
-
-## Step 2: Configure AWS Credentials
-
-1. Create an IAM user in AWS Console with these policies:
-
-   - `AmazonS3FullAccess`
-   - `CloudFrontFullAccess`
-   - `AmazonRoute53FullAccess`
-   - `AWSCertificateManagerFullAccess`
-   - `CloudFormationFullAccess`
-
-2. Configure AWS CLI:
+For full production deployment with SSL:
 
 ```bash
-aws configure
+# Deploy with SSL
+./aws/deploy-with-ssl.sh yourdomain.com true
 ```
 
-Enter your:
+## 🔧 GitHub Actions Setup
 
-- AWS Access Key ID
-- AWS Secret Access Key
-- Default region (recommend: `us-east-1`)
-- Default output format: `json`
+### Required Secrets
 
-## Step 3: Deploy AWS Infrastructure
+Set these in your GitHub repository secrets:
 
-1. Navigate to the aws directory:
+| Secret                  | Description               | Required | Example                      |
+| ----------------------- | ------------------------- | -------- | ---------------------------- |
+| `AWS_ACCESS_KEY_ID`     | AWS Access Key            | ✅       | `AKIA...`                    |
+| `AWS_SECRET_ACCESS_KEY` | AWS Secret Key            | ✅       | `wJalr...`                   |
+| `DOMAIN_NAME`           | Your domain name          | ✅       | `yourdomain.com`             |
+| `SUBDOMAIN_NAME`        | Subdomain prefix          | ❌       | `www` (default)              |
+| `STACK_NAME`            | CloudFormation stack name | ❌       | `personal-website` (default) |
+| `ENABLE_SSL`            | Enable SSL certificate    | ❌       | `false` (default)            |
+
+### Deployment Modes
+
+#### Simple Mode (Default)
+
+- No SSL certificate
+- Uses CloudFront default domain
+- Fastest deployment (~15-20 minutes)
+- Immediate access via CloudFront URL
+
+```yaml
+# In GitHub Secrets
+ENABLE_SSL: false # or omit this secret
+```
+
+#### SSL Mode
+
+- Creates SSL certificate
+- Requires manual validation
+- Custom domain support
+- Longer deployment (~30-45 minutes)
+
+```yaml
+# In GitHub Secrets
+ENABLE_SSL: true
+```
+
+## 📋 Deployment Process
+
+### 1. Infrastructure Creation
+
+The deployment creates:
+
+- **S3 Bucket** - Stores your website files
+- **CloudFront Distribution** - CDN for global delivery
+- **Route 53 Hosted Zone** - DNS management
+- **SSL Certificate** (if enabled) - HTTPS support
+- **DNS Records** (if SSL enabled) - Domain routing
+
+### 2. SSL Certificate Validation (SSL Mode Only)
+
+When SSL is enabled:
+
+1. Certificate is created in AWS Certificate Manager
+2. **Manual validation required** - you must add CNAME records
+3. CloudFront waits for certificate validation
+4. Custom domain becomes active after validation
+
+### 3. DNS Configuration
+
+Update your domain registrar (e.g., Namecheap) nameservers to the Route 53 nameservers provided in the deployment output.
+
+## 🛠️ Local Development & Testing
+
+### Test Template Validation
 
 ```bash
-cd aws
+# Test simple template
+./aws/test-deploy.sh yourdomain.com
+
+# Validate SSL template
+aws cloudformation validate-template \
+  --template-body file://aws/cloudformation-template-ssl.yml
 ```
 
-2. Make the deployment script executable:
+### Debug Existing Stack
 
 ```bash
-chmod +x deploy-infrastructure.sh
+# Debug current stack
+./aws/debug-stack.sh personal-website eu-west-1
+
+# Check stack events
+aws cloudformation describe-stack-events \
+  --stack-name personal-website \
+  --region eu-west-1
 ```
 
-3. Run the deployment script:
+### Manual Deployment
 
 ```bash
-./deploy-infrastructure.sh
+# Deploy simple stack
+aws cloudformation deploy \
+  --template-file aws/cloudformation-template-simple.yml \
+  --stack-name personal-website \
+  --parameter-overrides DomainName=yourdomain.com SubdomainName=www \
+  --capabilities CAPABILITY_IAM \
+  --region eu-west-1
+
+# Deploy SSL stack
+aws cloudformation deploy \
+  --template-file aws/cloudformation-template-ssl.yml \
+  --stack-name personal-website \
+  --parameter-overrides DomainName=yourdomain.com SubdomainName=www EnableSSL=true \
+  --capabilities CAPABILITY_IAM \
+  --region eu-west-1
 ```
 
-4. Follow the prompts:
-   - Enter your domain name (e.g., `yourdomain.com`)
-   - Enter subdomain (default: `www`)
-   - Enter AWS region (default: `us-east-1`)
-   - Enter stack name (default: `personal-website`)
+## 🔒 SSL Certificate Management
 
-## Step 4: Configure GitHub Secrets
+### Automatic DNS Validation
 
-After the infrastructure deployment completes, add these secrets to your GitHub repository:
+When using Route 53 for DNS, the certificate can auto-validate:
 
-1. Go to your GitHub repository
-2. Navigate to **Settings** → **Secrets and variables** → **Actions**
-3. Add these repository secrets:
+1. Certificate creates DNS validation records
+2. Route 53 hosted zone automatically validates
+3. Certificate becomes active within 5-10 minutes
 
-| Secret Name                  | Value                  | Description                |
-| ---------------------------- | ---------------------- | -------------------------- |
-| `AWS_ACCESS_KEY_ID`          | Your AWS Access Key    | IAM user access key        |
-| `AWS_SECRET_ACCESS_KEY`      | Your AWS Secret Key    | IAM user secret key        |
-| `S3_BUCKET_NAME`             | From deployment output | S3 bucket name             |
-| `CLOUDFRONT_DISTRIBUTION_ID` | From deployment output | CloudFront distribution ID |
+### Manual Validation Steps
 
-## Step 5: Configure Namecheap DNS
+If auto-validation fails:
 
-1. Log in to your Namecheap account
-2. Go to **Domain List** → **Manage** for your domain
-3. Navigate to **Nameservers** section
-4. Select **Custom DNS**
-5. Replace the nameservers with the AWS Route 53 nameservers from the deployment output
+1. Go to AWS Certificate Manager console
+2. Find your certificate
+3. Copy the CNAME validation records
+4. Add them to your DNS provider
+5. Wait for validation (5-30 minutes)
 
-**Example nameservers (yours will be different):**
-
-```
-ns-1234.awsdns-12.org
-ns-5678.awsdns-34.net
-ns-9012.awsdns-56.com
-ns-3456.awsdns-78.co.uk
-```
-
-## Step 6: Deploy Your Application
-
-1. Push your code to the `main` branch:
+### Check Certificate Status
 
 ```bash
-git add .
-git commit -m "Add AWS deployment configuration"
-git push origin main
+# Get certificate ARN from stack outputs
+CERT_ARN=$(aws cloudformation describe-stacks \
+  --stack-name personal-website \
+  --query 'Stacks[0].Outputs[?OutputKey==`SSLCertificateArn`].OutputValue' \
+  --output text)
+
+# Check certificate status
+aws acm describe-certificate \
+  --certificate-arn $CERT_ARN \
+  --region eu-west-1
 ```
 
-2. The GitHub Actions workflow will automatically:
-   - Build your React application
-   - Upload files to S3
-   - Invalidate CloudFront cache
-   - Your site will be live!
+## 🌍 DNS Configuration
 
-## Step 7: Verify Deployment
+### Nameserver Update
 
-1. **Check GitHub Actions**: Ensure the workflow completed successfully
-2. **Test CloudFront URL**: Visit the CloudFront distribution URL
-3. **Test Custom Domain**: Visit your custom domain (may take up to 48 hours for DNS propagation)
+After deployment, update your domain's nameservers:
 
-## Monitoring and Maintenance
+1. **Get nameservers** from deployment output
+2. **Login to your domain registrar** (e.g., Namecheap)
+3. **Update nameservers** to the Route 53 values
+4. **Wait for propagation** (up to 48 hours)
 
-### View Deployment Logs
+### Verify DNS Propagation
 
 ```bash
-# Check CloudFormation stack status
-aws cloudformation describe-stacks --stack-name personal-website
+# Check nameservers
+dig NS yourdomain.com
 
-# View CloudFront distribution
-aws cloudfront list-distributions
+# Check A record
+dig yourdomain.com
+dig www.yourdomain.com
 ```
 
-### Manual Deployment (if needed)
-
-```bash
-# Build the application
-npm run build
-
-# Upload to S3
-aws s3 sync dist/ s3://your-bucket-name --delete
-
-# Invalidate CloudFront cache
-aws cloudfront create-invalidation --distribution-id YOUR_DISTRIBUTION_ID --paths "/*"
-```
-
-### Update Infrastructure
-
-To modify the infrastructure, edit `cloudformation-template.yml` and run:
-
-```bash
-./deploy-infrastructure.sh
-```
-
-## Troubleshooting
+## 🚨 Troubleshooting
 
 ### Common Issues
 
-1. **DNS not resolving**
+#### 1. CloudFront SSL Error
 
-   - Wait up to 48 hours for DNS propagation
-   - Verify nameservers are correctly set in Namecheap
-
-2. **SSL Certificate pending validation**
-
-   - Ensure DNS is properly configured
-   - Certificate validation can take 30+ minutes
-
-3. **GitHub Actions failing**
-
-   - Verify all secrets are correctly set
-   - Check AWS permissions for the IAM user
-
-4. **404 errors on refresh**
-   - The CloudFormation template includes error page redirects for SPA routing
-
-### Useful Commands
-
-```bash
-# Check certificate status
-aws acm list-certificates --region us-east-1
-
-# View Route 53 hosted zones
-aws route53 list-hosted-zones
-
-# Check S3 bucket website configuration
-aws s3api get-bucket-website --bucket your-bucket-name
+```
+Error: To add an alternate domain name (CNAME) to a CloudFront distribution,
+you must attach a trusted certificate
 ```
 
-## Cost Estimation
+**Solution**: Use simple template first, then upgrade to SSL
 
-**Monthly costs (approximate):**
+#### 2. Stack Creation Timeout
 
-- S3 Storage: $0.023/GB
-- CloudFront: $0.085/GB (first 10TB)
-- Route 53: $0.50/hosted zone + $0.40/million queries
-- Certificate Manager: Free
+**Symptoms**: Stack hangs on "CREATE_IN_PROGRESS"
+**Solution**:
 
-**Typical small website: $1-5/month**
+- Check CloudFormation events
+- Use debug script: `./aws/debug-stack.sh`
+- CloudFront can take 15-45 minutes
 
-## Security Features
+#### 3. Certificate Validation Stuck
 
-- ✅ HTTPS enforced via CloudFront
-- ✅ Security headers via CloudFront response headers policy
-- ✅ Origin Access Control (OAC) for S3 bucket security
-- ✅ Public access blocked on S3 (access only via CloudFront)
+**Symptoms**: Certificate stays in "Pending validation"
+**Solution**:
 
-## Support
+- Check DNS records are added correctly
+- Ensure nameservers are updated
+- Wait up to 30 minutes for validation
 
-For issues with this setup:
+#### 4. S3 Bucket Name Conflict
+
+**Symptoms**: Bucket already exists error
+**Solution**: Bucket names include account ID for uniqueness
+
+### Debug Commands
+
+```bash
+# Check stack status
+aws cloudformation describe-stacks --stack-name personal-website
+
+# View stack events
+aws cloudformation describe-stack-events --stack-name personal-website
+
+# Check failed resources
+aws cloudformation describe-stack-events \
+  --stack-name personal-website \
+  --query 'StackEvents[?ResourceStatus==`CREATE_FAILED`]'
+
+# Delete failed stack
+aws cloudformation delete-stack --stack-name personal-website
+```
+
+## 📊 Cost Estimation
+
+### Monthly Costs (Approximate)
+
+- **Route 53 Hosted Zone**: $0.50/month
+- **CloudFront**: $0.085/GB + $0.0075/10k requests
+- **S3 Storage**: $0.023/GB
+- **SSL Certificate**: Free (AWS Certificate Manager)
+
+**Typical small website**: $1-5/month
+
+### Cost Optimization
+
+- Use `PriceClass_100` (default) for CloudFront
+- Enable S3 versioning cleanup
+- Monitor CloudFront usage
+
+## 🔄 Updates & Maintenance
+
+### Update Website Content
+
+1. Upload files to S3 bucket
+2. Invalidate CloudFront cache
+3. Changes are live immediately
+
+### Update Infrastructure
+
+1. Modify CloudFormation template
+2. Run deployment script
+3. Stack updates automatically
+
+### Enable SSL Later
+
+1. Set `ENABLE_SSL=true` in GitHub secrets
+2. Trigger new deployment
+3. Complete certificate validation
+
+## 📚 Additional Resources
+
+- [AWS CloudFormation Documentation](https://docs.aws.amazon.com/cloudformation/)
+- [AWS Certificate Manager](https://docs.aws.amazon.com/acm/)
+- [CloudFront Documentation](https://docs.aws.amazon.com/cloudfront/)
+- [Route 53 Documentation](https://docs.aws.amazon.com/route53/)
+
+## 🆘 Support
+
+If you encounter issues:
 
 1. Check the troubleshooting section above
-2. Review AWS CloudFormation events in the AWS Console
-3. Check GitHub Actions logs for deployment issues
+2. Run the debug script: `./aws/debug-stack.sh`
+3. Review CloudFormation events in AWS Console
+4. Check GitHub Actions logs for CI/CD issues
 
 ---
 
