@@ -11,7 +11,7 @@ export const Education = () => {
       <Typography variant="h5" fontWeight="700" letterSpacing="-0.05em">
         CERTIFICATIONS
       </Typography>
-      <Divider variant="fullWidth" sx={{ backgroundColor: '#000', }} />
+      <Divider variant="fullWidth" sx={{ backgroundColor: '#000' }} />
       <List gap={1}>
         <ListItem position="AWS Cloud Solutions" date="08/2024" />
       </List>

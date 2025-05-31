@@ -76,7 +76,7 @@ git push origin main
 
 ```yaml
 ✅ Checkout code
-✅ Setup Node.js 18
+✅ Setup Node.js 22
 ✅ Install dependencies
 ✅ Run ESLint
 ✅ Run Vitest tests with coverage
