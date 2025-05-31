@@ -3,7 +3,7 @@ import { Box, Link, Typography } from '@mui/material';
 export const Title = () => {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
+      <Link href="/" style={{ textDecoration: 'none', color: 'inherit' }}>
         <Typography variant="h5" fontSize="32px" textTransform="uppercase" fontWeight={700} letterSpacing="-0.05em">
           Anton Izmailov
         </Typography>
