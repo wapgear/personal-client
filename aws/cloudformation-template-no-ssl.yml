@@ -1,24 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: 'Static website hosting with S3, CloudFront, and custom domain'
-
-# AWS Managed Policy IDs - These are global constants provided by AWS
-Mappings:
-  AWSManagedPolicies:
-    CloudFront:
-      CachingOptimized: '658327ea-f89d-4fab-a63d-7e88639e58f6'
-      CachingDisabled: '4135ea2d-6df8-44a3-9df3-4b5a84be39ad'
-      CachingOptimizedForUncompressed: 'b2884449-e4de-46a7-ac36-70bc7f1ddd6d'
-    OriginRequest:
-      CORSCustomOrigin: '59781a5b-3903-41f3-afcb-af62929ccde1'
-      CORSS3Origin: '88a5eaf4-2fd4-4709-b370-b4c650ea3fcf'
-      AllViewer: '216adef6-5c7f-47e4-b989-5492eafa07d3'
-    ResponseHeaders:
-      SecurityHeadersPolicy: '67f7725c-6f97-4210-82d7-5512b31e9d03'
-      SimpleCORS: '60669652-455b-4ae9-85a4-c4c02393f86c'
-      CORSAndSecurityHeaders: 'e61eb60c-9c35-4d20-a928-2b84e02af89c'
-  AWSConstants:
-    CloudFront:
-      HostedZoneId: 'Z2FDTNDATAQYW2' # Global CloudFront hosted zone ID
+Description: 'Static website hosting with S3, CloudFront, and custom domain (without SSL for quick deployment)'
 
 Parameters:
   DomainName:
@@ -65,17 +46,6 @@ Resources:
             Action: s3:GetObject
             Resource: !Sub '${WebsiteBucket}/*'
 
-  # SSL Certificate
-  SSLCertificate:
-    Type: AWS::CertificateManager::Certificate
-    Properties:
-      DomainName: !Sub '${SubdomainName}.${DomainName}'
-      SubjectAlternativeNames:
-        - !Ref DomainName
-      ValidationMethod: DNS
-      # Removed DomainValidationOptions to prevent hanging
-      # The certificate will need to be validated manually after stack creation
-
   # CloudFront Origin Access Control
   OriginAccessControl:
     Type: AWS::CloudFront::OriginAccessControl
@@ -86,7 +56,7 @@ Resources:
         SigningBehavior: always
         SigningProtocol: sigv4
 
-  # CloudFront Distribution
+  # CloudFront Distribution (without SSL certificate)
   CloudFrontDistribution:
     Type: AWS::CloudFront::Distribution
     Properties:
@@ -96,10 +66,10 @@ Resources:
           - !Ref DomainName
         DefaultCacheBehavior:
           TargetOriginId: S3Origin
-          ViewerProtocolPolicy: redirect-to-https
-          CachePolicyId: !FindInMap [AWSManagedPolicies, CloudFront, CachingOptimized]
-          OriginRequestPolicyId: !FindInMap [AWSManagedPolicies, OriginRequest, CORSS3Origin]
-          ResponseHeadersPolicyId: !FindInMap [AWSManagedPolicies, ResponseHeaders, SecurityHeadersPolicy]
+          ViewerProtocolPolicy: allow-all
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6 # Managed-CachingOptimized
+          OriginRequestPolicyId: 88a5eaf4-2fd4-4709-b370-b4c650ea3fcf # Managed-CORS-S3Origin
+          ResponseHeadersPolicyId: 67f7725c-6f97-4210-82d7-5512b31e9d03 # Managed-SecurityHeadersPolicy
         DefaultRootObject: index.html
         Enabled: true
         HttpVersion: http2
@@ -112,9 +82,7 @@ Resources:
             OriginAccessControlId: !Ref OriginAccessControl
         PriceClass: PriceClass_100
         ViewerCertificate:
-          AcmCertificateArn: !Ref SSLCertificate
-          SslSupportMethod: sni-only
-          MinimumProtocolVersion: TLSv1.2_2021
+          CloudFrontDefaultCertificate: true
         CustomErrorResponses:
           - ErrorCode: 403
             ResponseCode: 200
@@ -140,7 +108,7 @@ Resources:
       Type: A
       AliasTarget:
         DNSName: !GetAtt CloudFrontDistribution.DomainName
-        HostedZoneId: !FindInMap [AWSConstants, CloudFront, HostedZoneId]
+        HostedZoneId: Z2FDTNDATAQYW2 # CloudFront hosted zone ID
 
   DNSRecordRoot:
     Type: AWS::Route53::RecordSet
@@ -150,12 +118,12 @@ Resources:
       Type: A
       AliasTarget:
         DNSName: !GetAtt CloudFrontDistribution.DomainName
-        HostedZoneId: !FindInMap [AWSConstants, CloudFront, HostedZoneId]
+        HostedZoneId: Z2FDTNDATAQYW2 # CloudFront hosted zone ID
 
 Outputs:
   WebsiteURL:
     Description: 'Website URL'
-    Value: !Sub 'https://${SubdomainName}.${DomainName}'
+    Value: !Sub 'http://${SubdomainName}.${DomainName}'
     Export:
       Name: !Sub '${AWS::StackName}-WebsiteURL'
 
