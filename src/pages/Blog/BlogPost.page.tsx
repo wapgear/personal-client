@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { loadPostBySlug } from '../../content';
 import { MDXProvider } from '@mdx-js/react';
 import {
@@ -39,13 +39,19 @@ export function BlogPostPage() {
   const [loaded, setLoaded] = useState<LoadedPost>(null);
   const [error, setError] = useState<string | null>(null);
   const { colorScheme } = useColorScheme();
+  const navigate = useNavigate();
 
   useEffect(() => {
     let cancelled = false;
     if (!slug) return;
     loadPostBySlug(slug)
       .then((mod) => {
-        if (!cancelled) setLoaded(mod);
+        if (cancelled) return;
+        if (!mod) {
+          navigate('/404', { replace: true });
+          return;
+        }
+        setLoaded(mod);
       })
       .catch((e) => {
         if (!cancelled) setError(String(e?.message || e));
@@ -53,7 +59,7 @@ export function BlogPostPage() {
     return () => {
       cancelled = true;
     };
-  }, [slug]);
+  }, [slug, navigate]);
 
   if (!slug) return null;
 
