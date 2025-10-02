@@ -1,3 +1,4 @@
+/// <reference types="vitest" />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react-swc';
 import mdx from '@mdx-js/rollup';
@@ -11,23 +12,20 @@ import rehypePrettyCode from 'rehype-pretty-code';
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
-    {
-      ...(mdx({
-        mdExtensions: ['.md', '.mdx'],
-        providerImportSource: '@mdx-js/react',
-        remarkPlugins: [remarkGfm, remarkFrontmatter, [remarkMdxFrontmatter, { name: 'frontmatter' }]],
-        rehypePlugins: [
-          rehypeSlug,
-          [rehypeAutolinkHeadings, { behavior: 'wrap' }],
-          [rehypePrettyCode, { theme: 'github-dark' }],
-        ],
-      }) as unknown as Record<string, unknown>),
-      enforce: 'pre',
-    } as unknown as any,
+    mdx({
+      mdxExtensions: ['.mdx'],
+      mdExtensions: ['.md'],
+      providerImportSource: '@mdx-js/react',
+      remarkPlugins: [remarkGfm, remarkFrontmatter, [remarkMdxFrontmatter, { name: 'frontmatter' }]],
+      rehypePlugins: [
+        rehypeSlug,
+        [rehypeAutolinkHeadings, { behavior: 'wrap' }],
+        [rehypePrettyCode, { theme: 'github-dark' }],
+      ],
+    }),
     react({
       devTarget: 'es2022',
       plugins: [['@swc/plugin-emotion', {}]],
-      exclude: [/\.mdx?$/],
     }),
   ],
   test: {

@@ -7,7 +7,7 @@ export function BlogIndexPage() {
   return (
     <Container maxWidth="md" sx={{ py: { xs: 2, sm: 4, md: 6 } }}>
       <Typography variant="h3" component="h1" gutterBottom sx={{ fontWeight: 700, mb: 4 }}>
-        Blog
+        Listen, I have something to tell you...
       </Typography>
       <List disablePadding>
         {posts.map((p) => (

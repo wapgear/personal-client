@@ -18,7 +18,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  useTheme,
   useColorScheme,
 } from '@mui/material';
 import type { MDXComponents } from 'mdx/types';
@@ -100,7 +99,7 @@ export function BlogPostPage() {
     h6: (props) => (
       <Typography variant="subtitle2" component="h6" gutterBottom sx={{ mt: 2, mb: 1, fontWeight: 600 }} {...props} />
     ),
-    p: (props) => <Typography variant="body1" paragraph sx={{ mb: 2, lineHeight: 1.7 }} {...props} />,
+    p: (props) => <Typography variant="body1" paragraph sx={{ lineHeight: 1.7 }} {...props} />,
     a: (props) => <Link underline="hover" {...props} />,
     ul: (props) => (
       <Box

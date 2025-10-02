@@ -97,6 +97,13 @@ export const theme = createTheme({
         },
       },
     },
+    MuiCssBaseline: {
+      styleOverrides: {
+        'button p': {
+          marginBottom: 0,
+        },
+      },
+    },
   },
   colorSchemes,
   typography: {
