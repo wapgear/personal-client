@@ -12,17 +12,20 @@ import rehypePrettyCode from 'rehype-pretty-code';
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
-    mdx({
-      mdxExtensions: ['.mdx'],
-      mdExtensions: ['.md'],
-      providerImportSource: '@mdx-js/react',
-      remarkPlugins: [remarkGfm, remarkFrontmatter, [remarkMdxFrontmatter, { name: 'frontmatter' }]],
-      rehypePlugins: [
-        rehypeSlug,
-        [rehypeAutolinkHeadings, { behavior: 'wrap' }],
-        [rehypePrettyCode, { theme: 'github-dark' }],
-      ],
-    }),
+    {
+      ...mdx({
+        mdxExtensions: ['.mdx'],
+        mdExtensions: ['.md'],
+        providerImportSource: '@mdx-js/react',
+        remarkPlugins: [remarkGfm, remarkFrontmatter, [remarkMdxFrontmatter, { name: 'frontmatter' }]],
+        rehypePlugins: [
+          rehypeSlug,
+          [rehypeAutolinkHeadings, { behavior: 'wrap' }],
+          [rehypePrettyCode, { theme: 'github-dark' }],
+        ],
+      }),
+      enforce: 'pre',
+    },
     react({
       devTarget: 'es2022',
       plugins: [['@swc/plugin-emotion', {}]],

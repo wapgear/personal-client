@@ -43,7 +43,7 @@ export function Doter({ map }: Settings) {
     getPoints() {
       return Object.values(points);
     },
-    getPoint([key, data]: [string, any], shape: string, color: string, radius: number) {
+    getPoint([key, data]: [string, Point], shape: string, color: string, radius: number) {
       const { x, y, svgOptions = {} } = data;
       const pointRadius = svgOptions.radius || radius;
       if (shape === 'circle') {

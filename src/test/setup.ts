@@ -13,7 +13,7 @@ Object.defineProperty(window, 'localStorage', {
 });
 
 // Mock IntersectionObserver
-(globalThis as any).IntersectionObserver = class IntersectionObserver {
+(globalThis as unknown as { IntersectionObserver: unknown }).IntersectionObserver = class IntersectionObserver {
   constructor() {}
   disconnect() {}
   observe() {}
@@ -21,7 +21,7 @@ Object.defineProperty(window, 'localStorage', {
 };
 
 // Mock ResizeObserver
-(globalThis as any).ResizeObserver = class ResizeObserver {
+(globalThis as unknown as { ResizeObserver: unknown }).ResizeObserver = class ResizeObserver {
   constructor() {}
   disconnect() {}
   observe() {}

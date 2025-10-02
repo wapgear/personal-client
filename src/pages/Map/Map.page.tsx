@@ -62,7 +62,7 @@ const getPrecompiledMapData = (containerHeight: number) => {
   const seen = new Set<string>();
   const hexagons: Array<{ x: number; y: number; isHighlighted: boolean }> = [];
 
-  rawPoints.forEach((pt: any) => {
+  rawPoints.forEach((pt: { x: number; y: number }) => {
     const key = `${pt.x}:${pt.y}`;
     if (seen.has(key)) return;
     seen.add(key);

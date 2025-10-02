@@ -37,7 +37,7 @@ export interface SvgOptions {
 export interface Pin {
   lat: number;
   lng: number;
-  data?: any;
+  data?: Point;
   svgOptions?: SvgOptions;
 }
 
@@ -53,6 +53,6 @@ export type Point = {
   y: number;
   lat: number;
   lng: number;
-  data?: any;
+  data?: Point;
   svgOptions?: SvgOptions;
 };
