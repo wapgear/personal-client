@@ -78,7 +78,7 @@ export const LandingPage = () => {
               placement="top"
               arrow
             >
-              <img alt="logo" src="/avatar.jpeg" />
+              <img alt="logo" src="/assets/avatar.jpeg" />
             </Tooltip>
           </AvatarContainer>
         </Grid>
