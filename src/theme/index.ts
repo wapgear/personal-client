@@ -14,7 +14,7 @@ const colorSchemes: CssVarsThemeOptions['colorSchemes'] = {
       linkButtonBackground: '#1c1c1c',
       text: {
         primary: '#121212',
-        secondary: '#FDFDFD',
+        secondary: '#666666',
       },
       textStatic: {
         primary: '#FDFDFD',

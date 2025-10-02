@@ -14,6 +14,7 @@ export default defineConfig({
     {
       ...(mdx({
         mdExtensions: ['.md', '.mdx'],
+        providerImportSource: '@mdx-js/react',
         remarkPlugins: [remarkGfm, remarkFrontmatter, [remarkMdxFrontmatter, { name: 'frontmatter' }]],
         rehypePlugins: [
           rehypeSlug,
