@@ -1,187 +1,46 @@
-name: Deploy Application
+name: Deploy to AWS S3
 
 on:
   push:
-    branches: [main, develop]
-  pull_request:
-    branches: [main]
-
-env:
-  AWS_REGION: eu-west-1
+    branches:
+      - main
+  workflow_dispatch:
 
 jobs:
-  # CI Job - Test and Build
-  ci:
-    name: Test and Build
+  deploy:
     runs-on: ubuntu-latest
-
+    
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: '22'
+          node-version: '24'
           cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Run linter
-        run: npm run lint
-
-      - name: Run tests
-        run: npm run test -- --coverage --reporter=verbose
-        env:
-          CI: true
-
       - name: Build application
         run: npm run build
 
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-files
-          path: dist/
-          retention-days: 1
-
-  # Application Deployment Job
-  deploy-app:
-    name: Deploy Application
-    runs-on: ubuntu-latest
-    needs: ci
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-
-    steps:
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: build-files
-          path: dist/
-
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v5
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Validate AWS credentials and infrastructure
-        run: |
-          echo "🔐 Validating AWS credentials..."
-          aws sts get-caller-identity
-          echo "✅ AWS credentials validated!"
-
-          echo "🔍 Checking infrastructure..."
-          S3_BUCKET="${{ secrets.S3_BUCKET_NAME }}"
-          CLOUDFRONT_ID="${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}"
-
-          if [ -z "$S3_BUCKET" ] || [ -z "$CLOUDFRONT_ID" ]; then
-            echo "❌ Error: Missing infrastructure secrets"
-            echo "Please ensure S3_BUCKET_NAME and CLOUDFRONT_DISTRIBUTION_ID secrets are set"
-            echo "Run the one-time infrastructure setup script first: aws/setup-infrastructure.sh"
-            exit 1
-          fi
-
-          # Verify S3 bucket exists
-          if ! aws s3 ls "s3://$S3_BUCKET" >/dev/null 2>&1; then
-            echo "❌ Error: S3 bucket '$S3_BUCKET' not found or not accessible"
-            exit 1
-          fi
-
-          # Verify CloudFront distribution exists
-          if ! aws cloudfront get-distribution --id "$CLOUDFRONT_ID" >/dev/null 2>&1; then
-            echo "❌ Error: CloudFront distribution '$CLOUDFRONT_ID' not found or not accessible"
-            exit 1
-          fi
-
-          echo "✅ Infrastructure validation successful!"
+          aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Deploy to S3
         run: |
-          S3_BUCKET="${{ secrets.S3_BUCKET_NAME }}"
-          echo "📦 Deploying to S3 bucket: $S3_BUCKET"
-
-          # Upload static assets with long cache
-          aws s3 sync dist/ s3://$S3_BUCKET \
-            --delete \
-            --exact-timestamps \
-            --cache-control "public, max-age=31536000, immutable" \
-            --exclude "*.html" \
-            --exclude "*.json" \
-            --exclude "service-worker.js" \
-            --exclude "manifest.json"
-
-          # Upload HTML and dynamic files with short cache
-          aws s3 sync dist/ s3://$S3_BUCKET \
-            --cache-control "public, max-age=0, must-revalidate" \
-            --include "*.html" \
-            --include "*.json" \
-            --include "service-worker.js" \
-            --include "manifest.json"
-
-          echo "✅ Files uploaded successfully!"
-
-      - name: Invalidate CloudFront cache
+          aws s3 sync dist/ s3://${{ secrets.AWS_S3_BUCKET }}/ --delete
+          
+      - name: Invalidate CloudFront cache (optional)
+        if: ${{ secrets.AWS_CLOUDFRONT_DISTRIBUTION_ID != '' }}
         run: |
-          CLOUDFRONT_ID="${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}"
-          echo "🔄 Invalidating CloudFront distribution: $CLOUDFRONT_ID"
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ secrets.AWS_CLOUDFRONT_DISTRIBUTION_ID }} \
+            --paths "/*"
 
-          INVALIDATION_ID=$(aws cloudfront create-invalidation \
-            --distribution-id $CLOUDFRONT_ID \
-            --paths "/*" \
-            --query 'Invalidation.Id' \
-            --output text)
-
-          echo "✅ CloudFront invalidation created: $INVALIDATION_ID"
-
-      - name: Get deployment info
-        id: deployment-info
-        run: |
-          # Try to get stack outputs if stack name is available
-          STACK_NAME="${{ secrets.STACK_NAME }}"
-
-          if [ -n "$STACK_NAME" ]; then
-            echo "📊 Retrieving deployment information from CloudFormation stack..."
-            
-            WEBSITE_URL=$(aws cloudformation describe-stacks \
-              --stack-name "$STACK_NAME" \
-              --region ${{ env.AWS_REGION }} \
-              --query 'Stacks[0].Outputs[?OutputKey==`WebsiteURL`].OutputValue' \
-              --output text 2>/dev/null || echo "")
-            
-            CLOUDFRONT_URL=$(aws cloudformation describe-stacks \
-              --stack-name "$STACK_NAME" \
-              --region ${{ env.AWS_REGION }} \
-              --query 'Stacks[0].Outputs[?OutputKey==`CloudFrontURL`].OutputValue' \
-              --output text 2>/dev/null || echo "")
-            
-            if [ -z "$CLOUDFRONT_URL" ]; then
-              CLOUDFRONT_URL="$WEBSITE_URL"
-            fi
-          else
-            echo "📊 Stack name not available, using CloudFront distribution info..."
-            CLOUDFRONT_DOMAIN=$(aws cloudfront get-distribution \
-              --id "${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}" \
-              --query 'Distribution.DomainName' \
-              --output text)
-            CLOUDFRONT_URL="https://$CLOUDFRONT_DOMAIN"
-            WEBSITE_URL="$CLOUDFRONT_URL"
-          fi
-
-          echo "website-url=$WEBSITE_URL" >> $GITHUB_OUTPUT
-          echo "cloudfront-url=$CLOUDFRONT_URL" >> $GITHUB_OUTPUT
-
-      - name: Deployment Summary
-        run: |
-          echo ""
-          echo "🎉 Application Deployment Completed!"
-          echo "===================================="
-          echo "📦 S3 Bucket: ${{ secrets.S3_BUCKET_NAME }}"
-          echo "🌐 CloudFront ID: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}"
-          echo "🔗 Website URL: ${{ steps.deployment-info.outputs.website-url }}"
-          echo "🔗 CloudFront URL: ${{ steps.deployment-info.outputs.cloudfront-url }}"
-          echo ""
-          echo "🚀 Your application is now live!"
-          echo "💡 Changes may take a few minutes to propagate through CloudFront"
