@@ -9,6 +9,8 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      AWS_CLOUDFRONT_DISTRIBUTION_ID: ${{ secrets.AWS_CLOUDFRONT_DISTRIBUTION_ID }}
     
     steps:
       - name: Checkout code
@@ -38,9 +40,9 @@ jobs:
           aws s3 sync dist/ s3://${{ secrets.AWS_S3_BUCKET }}/ --delete
           
       - name: Invalidate CloudFront cache (optional)
-        if: ${{ secrets.AWS_CLOUDFRONT_DISTRIBUTION_ID != '' }}
+        if: ${{ env.AWS_CLOUDFRONT_DISTRIBUTION_ID }}
         run: |
           aws cloudfront create-invalidation \
-            --distribution-id ${{ secrets.AWS_CLOUDFRONT_DISTRIBUTION_ID }} \
+            --distribution-id $AWS_CLOUDFRONT_DISTRIBUTION_ID \
             --paths "/*"
 
