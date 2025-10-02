@@ -19,6 +19,10 @@ export const LandingPage = () => {
     navigate('/cv');
   }, [navigate]);
 
+  const onMyBlog = useCallback(() => {
+    navigate('/blog');
+  }, [navigate]);
+
   const isMobile = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'));
 
   return (
@@ -53,6 +57,9 @@ export const LandingPage = () => {
               </Button>
               <Button variant="contained" color="primary" onClick={onMyCV}>
                 My CV
+              </Button>
+              <Button variant="contained" color="primary" onClick={onMyBlog}>
+                Blog
               </Button>
             </Actions>
             <Social>

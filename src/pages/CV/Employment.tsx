@@ -17,7 +17,7 @@ const employmentList = [
   {
     position: 'Senior Software Engineer',
     company: 'Strata K.K.',
-    location: 'Tokyo, Japan',
+    location: 'New York, USA',
     date: '10/2018 - Present',
     description: 'Fintech | Real Estate | Insurtech',
     isContractor: true,
@@ -32,7 +32,7 @@ const employmentList = [
     position: 'Senior Software Engineer',
     company: 'Reisetopia GmbH',
     location: 'Berlin, Germany',
-    date: '07/2019 - 02/2024',
+    date: '-',
     description: 'Luxury Travel | Hotel Engine | Travel Blog',
     isContractor: true,
     details: [

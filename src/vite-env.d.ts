@@ -17,3 +17,17 @@ declare module '@mui/material/styles' {
     dark: string;
   }
 }
+
+declare module '*.md' {
+  import type { ComponentType } from 'react';
+  export const frontmatter: Record<string, unknown>;
+  const MDXComponent: ComponentType<Record<string, unknown>>;
+  export default MDXComponent;
+}
+
+declare module '*.mdx' {
+  import type { ComponentType } from 'react';
+  export const frontmatter: Record<string, unknown>;
+  const MDXComponent: ComponentType<Record<string, unknown>>;
+  export default MDXComponent;
+}

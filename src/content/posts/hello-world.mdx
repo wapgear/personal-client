@@ -1,0 +1,118 @@
+---
+title: Hello World
+date: 2025-10-02
+description: Kicking off the blog with MDX on Vite + React.
+tags: [intro, mdx, vite]
+---
+
+import { Button, Alert, Chip, Stack, TextField, Link as MLink } from '@mui/material';
+
+# MDX + MUI Visual Test
+
+This page demonstrates how MDX content renders using MUI components. It includes headings, text styles like **bold**, _italic_, ~~strikethrough~~, and `inline code`, as well as [a link](https://example.com) and an auto-linked URL https://mui.com.
+
+## Headings
+
+### Heading level 3
+
+#### Heading level 4
+
+##### Heading level 5
+
+###### Heading level 6
+
+## Lists
+
+- Unordered list item A
+  - Nested item A.1
+  - Nested item A.2
+- Unordered list item B
+
+1. Ordered list item 1
+2. Ordered list item 2
+   1. Nested ordered 2.1
+   2. Nested ordered 2.2
+
+- [ ] Task pending
+- [x] Task done
+
+## Blockquote
+
+> "The only way to go fast, is to go well." — Robert C. Martin
+
+## Divider
+
+---
+
+## Code blocks
+
+```ts
+export function greet(name: string) {
+  return `Hello, ${name}!`;
+}
+```
+
+```bash
+pnpm install
+pnpm run dev
+```
+
+## Table
+
+| Feature    | Supported |
+| ---------- | :-------: |
+| GFM tables |    ✅     |
+| Task lists |    ✅     |
+| Footnotes  |    ✅     |
+
+## Image
+
+![Avatar example](/assets/avatar.jpeg)
+
+Caption: An image served from `public/assets/avatar.jpeg`.
+
+## MUI Components (embedded via MDX)
+
+<Stack direction="row" spacing={1} sx={{ my: 1 }}>
+  <Button variant="contained" color="primary" size="small">
+    Contained small
+  </Button>
+  <Button variant="contained" color="primary" size="medium">
+    Contained medium
+  </Button>
+  <Button variant="contained" color="primary" size="large">
+    Contained large
+  </Button>
+</Stack>
+<Stack direction="row" spacing={1} sx={{ my: 1 }}>
+  <Button variant="outlined" size="medium">
+    Outlined
+  </Button>
+  <Button variant="text" size="medium">
+    Text
+  </Button>
+  <MLink href="/blog" underline="hover">
+    MUI Link to blog index
+  </MLink>
+</Stack>
+
+<Stack direction="column" spacing={1} sx={{ my: 2 }}>
+  <Alert severity="info">Info alert</Alert>
+  <Alert severity="success">Success alert</Alert>
+  <Alert severity="warning">Warning alert</Alert>
+  <Alert severity="error">Error alert</Alert>
+</Stack>
+
+<Stack direction="row" spacing={1} sx={{ my: 1, alignItems: 'center' }}>
+  <Chip label="Primary" color="primary" />
+  <Chip label="Default" variant="outlined" />
+  <TextField label="TextField" size="small" />
+</Stack>
+
+## Footnotes
+
+Here is a footnote reference[^1]. Another one with inline text.[^short]
+
+[^1]: Footnote text providing additional context.
+
+[^short]: A short footnote.
