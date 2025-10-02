@@ -1,32 +1,32 @@
 import { useMediaQuery } from '@mui/material';
 import { useMemo } from 'react';
 import { theme } from '../theme';
-import { css } from '@emotion/react';
+import { css, SerializedStyles } from '@emotion/react';
 
-export const forMobiles = (...args: any) => css`
+export const forMobiles = (...args: SerializedStyles[]) => css`
   ${theme.breakpoints.down('sm')} {
     ${css(args)};
   }
 `;
 
-export const forMobilesAndTablets = (...args: any) => css`
+export const forMobilesAndTablets = (...args: SerializedStyles[]) => css`
   ${theme.breakpoints.down('md')} {
     ${css(args)};
   }
 `;
 
-export const forTablets = (...args: any) => css`
+export const forTablets = (...args: SerializedStyles[]) => css`
   ${theme.breakpoints.between('sm', 'md')} {
     ${css(args)};
   }
 `;
 
-export const forTabletsAndDesktop = (...args: any) => css`
+export const forTabletsAndDesktop = (...args: SerializedStyles[]) => css`
   ${theme.breakpoints.up('md')} {
     ${css(args)};
   }
 `;
-export const forDesktop = (...args: any) => css`
+export const forDesktop = (...args: SerializedStyles[]) => css`
   ${theme.breakpoints.up('lg')} {
     ${css(args)};
   }
