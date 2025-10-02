@@ -1,0 +1,63 @@
+# Cursor Rules for personal-client
+
+## Code Style
+
+- Always use arrow functions; never declare `function name() {}`.
+- Prefer named `const` exports over default exports.
+- Define `Props` for every component via `type`/`interface`; no implicit/loose props.
+
+## TypeScript
+
+- Never use `any` (no `: any`, `as any`, or implicit `any`). Prefer specific types, `unknown`, or generics.
+- Type DOM/component props via `React.ComponentPropsWithoutRef<'tag'>` or component-provided types (e.g., MUI component props).
+- Narrow types with proper unions/guards; avoid broad casts.
+
+## React + React Compiler
+
+- Keep components pure/deterministic; no side effects in render.
+- Don't overuse `useMemo`/`useCallback`; rely on the compiler and only add them if profiling proves a benefit.
+- Avoid module-level mutable state; keep keys stable; no `.bind(this)` or class components.
+- Prefer small, composable components with stable props.
+
+## UI & Styling (MUI-only)
+
+- Use MUI for all layout/typography: `Box`, `Stack`, `Grid`, `Container`, `Paper`, `Typography`, `Link`, `Button`, etc.
+- Style with `sx` or `styled` (Emotion). Don't use raw HTML for layout/typography (`div`, `span`, `h1`…); avoid inline `style` and raw CSS files.
+- Use theme tokens (`spacing`, `palette`, `typography`) and responsive `sx` values; avoid magic numbers.
+
+## Reusability
+
+- Extract repeated UI into reusable components in `src/components/` with explicit, well-typed props.
+- Keep components focused; prefer composition over deep prop drilling.
+- Co-locate styles with components via `sx`/`styled`.
+
+## MDX
+
+- Type MDX component mappings using `MDXComponents` from `@mdx-js/react`; do not use `any` for MDX element props.
+- Wrap MDX primitives with MUI equivalents (`Typography`, `Box component="ul"`, etc.).
+
+## Examples
+
+### Good ✅
+
+```typescript
+type SectionTitleProps = {
+  title: string;
+  onAction?: () => void;
+};
+
+export const SectionTitle = ({ title, onAction }: SectionTitleProps) => (
+  <Stack direction="row" spacing={1} alignItems="center">
+    <Typography variant="h6">{title}</Typography>
+    {onAction && <Button size="small" onClick={onAction}>Action</Button>}
+  </Stack>
+);
+```
+
+### Bad ❌
+
+```typescript
+function SectionTitle(props: any) {
+  return <div><h6>{props.title}</h6></div>;
+}
+```

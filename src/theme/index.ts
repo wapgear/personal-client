@@ -14,7 +14,7 @@ const colorSchemes: CssVarsThemeOptions['colorSchemes'] = {
       linkButtonBackground: '#1c1c1c',
       text: {
         primary: '#121212',
-        secondary: '#FDFDFD',
+        secondary: '#666666',
       },
       textStatic: {
         primary: '#FDFDFD',
@@ -94,6 +94,13 @@ export const theme = createTheme({
         sizeLarge: {
           padding: '1rem 2rem',
           fontSize: '1.5rem',
+        },
+      },
+    },
+    MuiCssBaseline: {
+      styleOverrides: {
+        'button p': {
+          marginBottom: 0,
         },
       },
     },

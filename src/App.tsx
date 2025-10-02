@@ -24,6 +24,20 @@ const router = createBrowserRouter([
         },
       },
       {
+        path: '/blog',
+        lazy: async () => {
+          const { BlogIndexPage } = await import('./pages/Blog/BlogIndex.page');
+          return { Component: BlogIndexPage };
+        },
+      },
+      {
+        path: '/blog/:slug',
+        lazy: async () => {
+          const { BlogPostPage } = await import('./pages/Blog/BlogPost.page');
+          return { Component: BlogPostPage };
+        },
+      },
+      {
         path: '/map',
         lazy: async () => {
           const { WorldMap } = await import('./pages/Map/Map.page');
@@ -31,6 +45,13 @@ const router = createBrowserRouter([
         },
       },
     ],
+  },
+  {
+    path: '*',
+    lazy: async () => {
+      const { NotFoundPage } = await import('./pages/NotFound/NotFound.page');
+      return { Component: NotFoundPage };
+    },
   },
 ]);
 
